@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B站视频信息爬取工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FB7299', // B站粉色调
+                        secondary: '#23ADE5', // B站蓝色调
+                        dark: '#18191C',
+                        light: '#F5F5F7'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-md sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center">
+                    <i class="fa fa-play-circle text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl md:text-2xl font-bold text-dark">B站视频信息爬取工具</h1>
+            </div>
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="#config" class="text-gray-600 hover:text-primary transition-colors">配置</a>
+                <a href="#progress" class="text-gray-600 hover:text-primary transition-colors">进度</a>
+                <a href="#results" class="text-gray-600 hover:text-primary transition-colors">结果</a>
+                <a href="#statistics" class="text-gray-600 hover:text-primary transition-colors">统计</a>
+            </nav>
+            <button class="md:hidden text-gray-600" id="mobile-menu-button">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+                <a href="#config" class="text-gray-600 hover:text-primary py-2 transition-colors">配置</a>
+                <a href="#progress" class="text-gray-600 hover:text-primary py-2 transition-colors">进度</a>
+                <a href="#results" class="text-gray-600 hover:text-primary py-2 transition-colors">结果</a>
+                <a href="#statistics" class="text-gray-600 hover:text-primary py-2 transition-colors">统计</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容 -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <!-- 介绍卡片 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 slide-in">
+            <div class="flex flex-col md:flex-row items-start md:items-center">
+                <div class="md:w-1/5 mb-4 md:mb-0">
+                    <div class="w-16 h-16 rounded-full gradient-bg flex items-center justify-center">
+                        <i class="fa fa-info-circle text-white text-2xl"></i>
+                    </div>
+                </div>
+                <div class="md:w-4/5">
+                    <h2 class="text-xl font-semibold mb-2">工具介绍</h2>
+                    <p class="text-gray-600">
+                        本工具可以根据关键词搜索并爬取B站(Bilibili)视频信息，包括视频标题、播放量、作者、发布时间等详细数据，
+                        最终生成Excel文件供您分析使用。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 配置区域 -->
+        <section id="config" class="bg-white rounded-xl shadow-lg p-6 mb-8 slide-in" style="animation-delay: 0.1s">
+            <h2 class="text-xl font-semibold mb-6 flex items-center">
+                <i class="fa fa-cogs text-primary mr-2"></i> 爬取配置
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 在关键词设置部分，替换原来的内容 -->
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">关键词设置</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">上传关键词Excel文件</label>
+                            <div class="flex items-center justify-center w-full">
+                                <label for="keyword-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i class="fa fa-cloud-upload text-3xl text-gray-400 mb-2"></i>
+                                        <p class="mb-1 text-sm text-gray-500"><span class="font-semibold">点击上传</span> 或拖放文件</p>
+                                        <p class="text-xs text-gray-500">支持 .xlsx 格式</p>
+                                    </div>
+                                    <input id="keyword-file" type="file" class="hidden" accept=".xlsx"/>
+                                </label>
+                            </div>
+                            <p id="file-name" class="text-sm text-gray-500 mt-2 hidden"></p>
+                        </div>
+                        
+                        <!-- 新增：直接输入关键词区域 -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-gray-600">或直接添加关键词</label>
+                                <button type="button" id="add-keyword-btn" class="flex items-center text-sm bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded-md transition-colors">
+                                    <i class="fa fa-plus mr-1"></i> 添加关键词
+                                </button>
+                            </div>
+                            <div id="keywords-container" class="space-y-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-md bg-gray-50">
+                                <p class="text-sm text-gray-500 text-center py-4">暂无关键词，点击上方按钮添加</p>
+                            </div>
+                            <div id="manual-keywords-input" class="mt-2 hidden">
+                                <div class="flex space-x-2">
+                                    <input type="text" id="new-keyword-input" placeholder="输入关键词..." 
+                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
+                                    <button type="button" id="confirm-keyword-btn" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors">
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                    <button type="button" id="cancel-keyword-btn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 爬取参数设置 -->
+                <div>
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">爬取参数</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="pages-to-crawl" class="block text-sm font-medium text-gray-600 mb-1">爬取页数（每关键词）</label>
+                            <div class="flex items-center">
+                                <input type="number" id="pages-to-crawl" min="1" max="10" value="5" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
+                                <span class="ml-2 text-gray-500">页</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="request-delay" class="block text-sm font-medium text-gray-600 mb-1">请求间隔（秒）</label>
+                            <div class="flex items-center">
+                                <input type="range" id="request-delay" min="1" max="10" value="3" step="0.5"
+                                    class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
+                                <span id="delay-value" class="ml-2 text-gray-500">3秒</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">爬取选项</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="enable-detailed-info" checked 
+                                        class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                                    <label for="enable-detailed-info" class="ml-2 text-sm text-gray-700">获取详细视频信息（作者、完整描述等）</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="remove-duplicates" checked 
+                                        class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                                    <label for="remove-duplicates" class="ml-2 text-sm text-gray-700">自动去除重复视频</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 开始爬取按钮 -->
+            <div class="mt-8 flex justify-center">
+                <button id="start-crawl" class="px-8 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all flex items-center">
+                    <i class="fa fa-play mr-2"></i> 开始爬取
+                </button>
+            </div>
+        </section>
+
+        <!-- 进度区域 -->
+        <section id="progress" class="bg-white rounded-xl shadow-lg p-6 mb-8 slide-in hidden" style="animation-delay: 0.2s">
+            <h2 class="text-xl font-semibold mb-6 flex items-center">
+                <i class="fa fa-spinner text-primary mr-2"></i> 爬取进度
+            </h2>
+            
+            <!-- 总体进度 -->
+            <div class="mb-6">
+                <div class="flex justify-between mb-1">
+                    <span class="text-sm font-medium text-gray-700">总体进度</span>
+                    <span id="overall-progress-text" class="text-sm font-medium text-primary">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="overall-progress-bar" class="bg-primary h-2.5 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <!-- 当前状态 -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">当前状态</h3>
+                <div class="flex items-center">
+                    <div id="status-indicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                    <span id="current-status" class="text-gray-600">等待开始爬取...</span>
+                </div>
+            </div>
+            
+            <!-- 日志区域 -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-700 mb-2">爬取日志</h3>
+                <div id="crawl-log" class="w-full h-64 bg-gray-50 rounded-lg border border-gray-200 p-4 overflow-y-auto text-sm text-gray-600 font-mono">
+                    <p class="text-gray-400 italic">日志将显示在这里...</p>
+                </div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div class="mt-6 flex justify-center space-x-4">
+                <button id="pause-crawl" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-all flex items-center hidden">
+                    <i class="fa fa-pause mr-2"></i> 暂停
+                </button>
+                <button id="resume-crawl" class="px-6 py-2 bg-secondary hover:bg-secondary/90 text-white rounded-lg font-medium transition-all flex items-center hidden">
+                    <i class="fa fa-play mr-2"></i> 继续
+                </button>
+                <button id="stop-crawl" class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all flex items-center hidden">
+                    <i class="fa fa-stop mr-2"></i> 停止
+                </button>
+            </div>
+        </section>
+
+        <!-- 结果区域 -->
+        <section id="results" class="bg-white rounded-xl shadow-lg p-6 mb-8 slide-in hidden" style="animation-delay: 0.3s">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold flex items-center">
+                    <i class="fa fa-table text-primary mr-2"></i> 爬取结果
+                </h2>
+                <div class="mt-4 md:mt-0">
+                    <button id="download-results" class="px-6 py-2 bg-secondary hover:bg-secondary/90 text-white rounded-lg font-medium transition-all flex items-center">
+                        <i class="fa fa-download mr-2"></i> 下载Excel
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 结果过滤 -->
+            <div class="mb-6 flex flex-col md:flex-row gap-4">
+                <div class="flex-grow">
+                    <div class="relative">
+                        <input type="text" id="search-results" placeholder="搜索视频标题或作者..." 
+                            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
+                        <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="w-full md:w-auto">
+                    <select id="filter-keyword" class="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors">
+                        <option value="">所有关键词</option>
+                        <!-- 动态填充关键词 -->
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 结果表格 -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BVID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">标题</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">作者</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">播放量</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">发布时间</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">关键词</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- 结果将动态填充到这里 -->
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                                爬取完成后将显示结果...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分页 -->
+            <div id="pagination" class="mt-6 flex justify-center items-center space-x-2 hidden">
+                <button id="prev-page" class="px-3 py-1 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa fa-chevron-left"></i>
+                </button>
+                <span id="page-info" class="text-gray-600">第 1 页，共 0 页</span>
+                <button id="next-page" class="px-3 py-1 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- 统计分析区域 -->
+        <section id="statistics" class="bg-white rounded-xl shadow-lg p-6 mb-8 slide-in hidden" style="animation-delay: 0.4s">
+            <h2 class="text-xl font-semibold mb-6 flex items-center">
+                <i class="fa fa-bar-chart text-primary mr-2"></i> 统计分析
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- 总览卡片 -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-4">爬取数据总览</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white rounded p-3 shadow-sm">
+                            <p class="text-sm text-gray-500">总视频数</p>
+                            <p id="total-videos" class="text-2xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="bg-white rounded p-3 shadow-sm">
+                            <p class="text-sm text-gray-500">平均播放量</p>
+                            <p id="avg-views" class="text-2xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="bg-white rounded p-3 shadow-sm">
+                            <p class="text-sm text-gray-500">处理关键词</p>
+                            <p id="processed-keywords" class="text-2xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="bg-white rounded p-3 shadow-sm">
+                            <p class="text-sm text-gray-500">爬取耗时</p>
+                            <p id="crawl-duration" class="text-2xl font-bold text-gray-800">0s</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 关键词分布 -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-4">关键词视频分布</h3>
+                    <div class="h-64">
+                        <canvas id="keywords-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 播放量分布 -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-4">播放量分布</h3>
+                    <div class="h-64">
+                        <canvas id="views-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 数据质量 -->
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-4">数据质量</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-xs text-gray-600">完整标题</span>
+                                <span id="complete-titles" class="text-xs font-medium text-gray-700">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="titles-progress" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-xs text-gray-600">完整作者信息</span>
+                                <span id="complete-authors" class="text-xs font-medium text-gray-700">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="authors-progress" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-xs text-gray-600">完整描述</span>
+                                    <span id="complete-descriptions" class="text-xs font-medium text-gray-700">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="descriptions-progress" class="bg-purple-500 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa fa-play-circle text-primary"></i>
+                        <span class="font-semibold">B站视频信息爬取工具</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mt-1">高效获取B站视频数据，助力内容分析</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-github text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-question-circle text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-envelope text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-6 pt-6 text-center text-gray-400 text-sm">
+                <p>© 2023 B站视频信息爬取工具 | 仅供学习研究使用</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 通知提示 -->
+    <div id="notification" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center">
+        <i id="notification-icon" class="fa fa-info-circle mr-2"></i>
+        <span id="notification-message">通知消息</span>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

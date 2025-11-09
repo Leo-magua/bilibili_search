@@ -1,0 +1,247 @@
+.content-auto {
+    content-visibility: auto;
+}
+
+.card-shadow {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.gradient-bg {
+    background: linear-gradient(135deg, #FB7299 0%, #23ADE5 100%);
+}
+
+.progress-bar {
+    transition: width 0.3s ease-in-out;
+}
+
+.pulse-animation {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.5s ease-out forwards;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 自定义滚动条 */
+#crawl-log::-webkit-scrollbar {
+    width: 6px;
+}
+
+#crawl-log::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#crawl-log::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#crawl-log::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 表格样式优化 */
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+}
+
+tr:hover {
+    background-color: #f9fafb;
+}
+
+/* 加载动画 */
+.loading-spinner {
+    border: 2px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 2px solid #FB7299;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    table {
+        font-size: 0.875rem;
+    }
+    
+    th, td {
+        padding: 8px 12px;
+    }
+}
+
+/* 文件上传区域美化 */
+.file-upload-area {
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #FB7299;
+    background-color: #fdf2f8;
+}
+
+.file-upload-area.drag-over {
+    border-color: #23ADE5;
+    background-color: #f0f9ff;
+}
+
+/* 按钮状态 */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+}
+
+/* 通知动画 */
+.notification-enter {
+    transform: translateY(20px);
+    opacity: 0;
+}
+
+.notification-enter-active {
+    transform: translateY(0);
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+.notification-exit {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.notification-exit-active {
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+/* 关键词标签样式 */
+.keyword-tag {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #FB7299 0%, #23ADE5 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    margin: 2px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.keyword-tag .remove-btn {
+    margin-left: 6px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.keyword-tag .remove-btn:hover {
+    opacity: 1;
+}
+
+.keyword-tag.empty-state {
+    background: #f3f4f6;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* 关键词容器滚动条 */
+#keywords-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#keywords-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#keywords-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#keywords-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.keyword-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* 空状态样式 */
+.empty-keywords {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 20px;
+}
